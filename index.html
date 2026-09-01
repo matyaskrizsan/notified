@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notified — News alerts checked against primary sources</title>
+<meta name="description" content="Notified tracks the topics you choose against primary databases — journal registries, clinical trials, court dockets, SEC and federal filings — and only notifies you when something genuinely matches what you're watching for.">
+<link rel="icon" href="icon.png">
+<meta name="theme-color" content="#000000">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://matyaskrizsan.github.io/notified/">
+<meta property="og:title" content="Notified">
+<meta property="og:description" content="Topic tracking that queries primary databases directly, and only notifies you when something genuinely matches.">
+<meta property="og:image" content="https://matyaskrizsan.github.io/notified/icon.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Notified">
+<meta name="twitter:description" content="Topic tracking that queries primary databases directly, and only notifies you when something genuinely matches.">
+<meta name="twitter:image" content="https://matyaskrizsan.github.io/notified/icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
+
+<style>
+/* Dark-first: the app is dark and the icon is rendered on black, so the
+   bare :root carries the dark palette and light is the override. */
+:root {
+  color-scheme: dark light;
+  --ground: #000000;
+  --surface: #0B0E14;
+  --rule: #1E2430;
+  --rule-soft: #161B24;
+  --text: #EEF2F8;
+  --muted: #7D8798;
+  --faint: #4E5766;
+  --accent: #1E7CFF;
+  --accent-deep: #0B44C4;
+  --accent-soft: #6FB4FF;
+  --tag-bg: #101722;
+  --shadow: 0 24px 60px -24px rgba(0,0,0,.9);
+
+  --f-display: "Newsreader", ui-serif, Georgia, "Times New Roman", serif;
+  --f-body: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --ground: #FBFCFE;
+    --surface: #FFFFFF;
+    --rule: #DDE4EE;
+    --rule-soft: #EAEFF6;
+    --text: #0B0E14;
+    --muted: #5A6475;
+    --faint: #939CAC;
+    --accent: #1257D6;
+    --accent-deep: #0B3FA8;
+    --accent-soft: #2B7BF5;
+    --tag-bg: #EDF3FC;
+    --shadow: 0 24px 60px -30px rgba(11,30,60,.28);
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--text);
+  font-family: var(--f-body);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+
+/* ---------- masthead ---------- */
+.masthead { display: flex; align-items: center; gap: 14px; padding: 28px 0 0; }
+.mark {
+  width: 46px; height: 46px; border-radius: 11px;
+  background: #000; flex: none; overflow: hidden;
+  box-shadow: 0 0 0 1px var(--rule), 0 6px 18px -8px rgba(30,124,255,.55);
+}
+.mark img { width: 100%; height: 100%; display: block; }
+.wordmark { font-family: var(--f-display); font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
+.masthead .status {
+  margin-left: auto; font-family: var(--f-mono); font-size: 12px;
+  color: var(--muted); letter-spacing: .04em; text-transform: uppercase;
+}
+
+/* ---------- hero ---------- */
+/* Top-aligned, not centered: the screenshot is ~2.2x taller than it is
+   wide, so centering the copy against it pushed the headline below the
+   fold on a laptop-height viewport. The phone now runs past the copy. */
+.hero {
+  display: grid; grid-template-columns: 1.05fr .95fr;
+  gap: 64px; align-items: start; padding: 64px 0 84px;
+}
+.eyebrow {
+  font-family: var(--f-mono); font-size: 12.5px;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 22px;
+}
+h1 {
+  font-family: var(--f-display);
+  font-size: clamp(44px, 5.4vw, 68px);
+  line-height: 1.04; font-weight: 500; letter-spacing: -.022em;
+  margin: 0 0 22px; text-wrap: balance;
+}
+h1 em { font-style: italic; color: var(--accent-soft); }
+.lede { font-size: 19px; color: var(--muted); margin: 0 0 30px; max-width: 34em; }
+.lede strong { color: var(--text); font-weight: 500; }
+.cta-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.cta {
+  display: inline-flex; align-items: center; gap: 9px;
+  background: var(--accent); color: #fff; font-weight: 500; font-size: 15px;
+  padding: 13px 22px; border-radius: 10px; text-decoration: none;
+  box-shadow: 0 10px 26px -12px var(--accent);
+}
+.cta:hover { background: var(--accent-deep); }
+.cta:focus-visible, a:focus-visible { outline: 2px solid var(--accent-soft); outline-offset: 3px; }
+.cta-note { font-size: 14px; color: var(--faint); }
+
+/* phone. height:auto is required alongside the width/height attributes on
+   the <img> - without it the attribute height wins and the screenshot
+   renders stretched to its full natural height inside a narrower box. */
+.phone {
+  border-radius: 30px; overflow: hidden; background: #000;
+  box-shadow: 0 0 0 1px var(--rule), var(--shadow);
+}
+.phone img { width: 100%; height: auto; display: block; }
+.hero .phone { max-width: 330px; margin-left: auto; }
+
+/* ---------- thesis ---------- */
+.thesis {
+  border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+  padding: 42px 0; display: grid; grid-template-columns: 190px 1fr; gap: 48px;
+}
+.thesis h2 {
+  font-family: var(--f-mono); font-size: 12.5px; font-weight: 500;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--faint); margin: 6px 0 0;
+}
+.thesis p {
+  font-family: var(--f-display); font-size: clamp(21px, 2.3vw, 27px);
+  line-height: 1.42; margin: 0; max-width: 30em; text-wrap: balance;
+}
+.thesis p span { color: var(--muted); }
+
+/* ---------- sections ---------- */
+section { padding: 82px 0; }
+.sec-head { margin-bottom: 40px; }
+.sec-head h2 {
+  font-family: var(--f-display); font-size: clamp(30px, 3.4vw, 40px);
+  font-weight: 500; letter-spacing: -.018em; line-height: 1.14; margin: 0 0 12px;
+}
+.sec-head p { color: var(--muted); margin: 0; max-width: 44em; }
+
+/* ---------- registry ---------- */
+.registry { display: grid; gap: 2px; background: var(--rule-soft); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+.reg-group { background: var(--surface); padding: 20px 22px; display: grid; grid-template-columns: 168px 1fr; gap: 26px; align-items: start; }
+.reg-group h3 {
+  font-family: var(--f-mono); font-size: 12px; font-weight: 500;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin: 3px 0 0;
+}
+.reg-items { display: flex; flex-direction: column; gap: 9px; }
+.reg-item { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.reg-name { font-weight: 500; font-size: 15.5px; }
+.reg-desc { color: var(--muted); font-size: 14.5px; }
+.tag {
+  font-family: var(--f-mono); font-size: 11.5px; color: var(--accent-soft);
+  background: var(--tag-bg); border: 1px solid var(--rule); border-radius: 5px;
+  padding: 1px 7px; white-space: nowrap;
+}
+
+/* ---------- steps ---------- */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+.step { background: var(--surface); padding: 30px 26px 34px; }
+.step-n { font-family: var(--f-mono); font-size: 12px; color: var(--faint); letter-spacing: .08em; margin-bottom: 16px; }
+.step h3 { font-family: var(--f-display); font-size: 22px; font-weight: 500; margin: 0 0 10px; letter-spacing: -.01em; }
+.step p { color: var(--muted); font-size: 15.5px; margin: 0; }
+
+/* ---------- screens ---------- */
+.screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px; }
+.screens.two { grid-template-columns: repeat(2, 1fr); gap: 44px; max-width: 780px; }
+.screen { margin: 0; }
+.screen figcaption { margin-top: 18px; }
+.screen h3 { font-size: 16px; font-weight: 600; margin: 0 0 6px; }
+.screen p { color: var(--muted); font-size: 14.5px; margin: 0; }
+
+/* ---------- details ---------- */
+.details { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+.detail { background: var(--surface); padding: 28px 26px; }
+.detail h3 { font-size: 16.5px; font-weight: 600; margin: 0 0 9px; }
+.detail p { color: var(--muted); font-size: 15px; margin: 0; }
+.detail .sample {
+  display: inline-block; margin-top: 14px; font-family: var(--f-mono); font-size: 12.5px;
+  color: var(--accent-soft); background: var(--tag-bg); border: 1px solid var(--rule);
+  border-radius: 6px; padding: 5px 10px; max-width: 100%; overflow-x: auto; white-space: nowrap;
+}
+
+/* ---------- plans ---------- */
+.plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+.plan { background: var(--surface); padding: 28px 26px 32px; }
+.plan .pname { font-family: var(--f-display); font-size: 22px; font-weight: 500; }
+.plan .price { font-family: var(--f-mono); font-size: 14px; color: var(--accent-soft); margin: 4px 0 18px; }
+.plan ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; }
+.plan li { color: var(--muted); font-size: 15px; padding-left: 16px; position: relative; }
+.plan li::before { content: "—"; position: absolute; left: 0; color: var(--faint); }
+
+/* ---------- footer ---------- */
+footer { border-top: 1px solid var(--rule); padding: 40px 0 62px; }
+.foot-row { display: flex; gap: 22px; align-items: baseline; flex-wrap: wrap; color: var(--faint); font-size: 14px; }
+.foot-row a { color: var(--muted); text-decoration: none; }
+.foot-row a:hover { color: var(--accent-soft); text-decoration: underline; }
+.foot-row .spacer { margin-left: auto; }
+
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; gap: 46px; padding: 54px 0 64px; }
+  .hero .phone { margin: 0; max-width: 300px; }
+  .thesis { grid-template-columns: 1fr; gap: 18px; }
+  .steps, .screens, .screens.two, .details, .plans { grid-template-columns: 1fr; }
+  .reg-group { grid-template-columns: 1fr; gap: 14px; }
+  section { padding: 60px 0; }
+  .foot-row .spacer { margin-left: 0; flex-basis: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="mark"><img src="assets/logo.png" alt="Notified app icon" width="46" height="46"></div>
+    <div class="wordmark">Notified.</div>
+    <div class="status">iOS &middot; coming soon</div>
+  </header>
+
+  <div class="hero">
+    <div>
+      <div class="eyebrow">Topic tracking for primary sources</div>
+      <h1>Notified when it&rsquo;s <em>actually</em> news.</h1>
+      <p class="lede">
+        Most alerts keyword-match articles about a thing. Notified queries the
+        <strong>records themselves</strong> &mdash; journal registries, trial databases,
+        court dockets, federal filings &mdash; and pings you only when something genuinely
+        matches what you said you were watching for.
+      </p>
+      <div class="cta-row">
+        <a class="cta" href="#how">See how it works</a>
+        <span class="cta-note">Coming to iPhone</span>
+      </div>
+    </div>
+    <div class="phone">
+      <img src="assets/detail.jpg" width="800" height="1739"
+           alt="The ALS topic in Notified: a watch list of five categories routed to academic sources, a Check for news now button, and a matched paper from the National ALS Registry tagged with its category, source and DOI.">
+    </div>
+  </div>
+
+  <div class="thesis">
+    <h2>The difference</h2>
+    <p>
+      A press release about a clinical trial is not the trial.
+      <span>Notified reads ClinicalTrials.gov, CrossRef, SEC EDGAR and the Federal Register directly,
+      then checks the date against independent evidence before it interrupts you.</span>
+    </p>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <h2>Seventeen sources, queried directly</h2>
+      <p>Each thing you watch for is routed to the database that actually holds it, rather than to a general web search hoping to catch a mention.</p>
+    </div>
+
+    <div class="registry">
+      <div class="reg-group">
+        <h3>Research</h3>
+        <div class="reg-items">
+          <div class="reg-item"><span class="reg-name">arXiv</span><span class="tag">academic</span><span class="reg-desc">New preprints, clamped to your window</span></div>
+          <div class="reg-item"><span class="reg-name">CrossRef</span><span class="tag">academic</span><span class="reg-desc">Published journal articles, with DOIs</span></div>
+          <div class="reg-item"><span class="reg-name">OpenAlex</span><span class="tag">academic</span><span class="reg-desc">The broad scholarly index</span></div>
+        </div>
+      </div>
+      <div class="reg-group">
+        <h3>Medicine</h3>
+        <div class="reg-items">
+          <div class="reg-item"><span class="reg-name">ClinicalTrials.gov</span><span class="tag">clinicaltrials</span><span class="reg-desc">Real status changes, not routine re-filings</span></div>
+          <div class="reg-item"><span class="reg-name">openFDA</span><span class="tag">fda</span><span class="reg-desc">Drug approvals and submissions</span></div>
+        </div>
+      </div>
+      <div class="reg-group">
+        <h3>Markets</h3>
+        <div class="reg-items">
+          <div class="reg-item"><span class="reg-name">SEC EDGAR</span><span class="tag">sec</span><span class="reg-desc">Public company filings, full-text</span></div>
+          <div class="reg-item"><span class="reg-name">SEC Form D</span><span class="tag">form_d</span><span class="reg-desc">How private funding rounds surface</span></div>
+          <div class="reg-item"><span class="reg-name">Alpaca Markets</span><span class="tag">alpaca</span><span class="reg-desc">Live prices &mdash; arithmetic, never guessed</span></div>
+        </div>
+      </div>
+      <div class="reg-group">
+        <h3>Government</h3>
+        <div class="reg-items">
+          <div class="reg-item"><span class="reg-name">Congress.gov</span><span class="tag">congress</span><span class="reg-desc">Bill text, full-text searched via GovInfo</span></div>
+          <div class="reg-item"><span class="reg-name">Public Laws</span><span class="tag">law_enacted</span><span class="reg-desc">Bills that actually became law</span></div>
+          <div class="reg-item"><span class="reg-name">Congressional Record</span><span class="tag">congressional_record</span><span class="reg-desc">Floor remarks and proceedings</span></div>
+          <div class="reg-item"><span class="reg-name">Federal Register</span><span class="tag">federal_register</span><span class="reg-desc">Agency rules, proposed rules, notices</span></div>
+        </div>
+      </div>
+      <div class="reg-group">
+        <h3>Courts</h3>
+        <div class="reg-items">
+          <div class="reg-item"><span class="reg-name">CourtListener</span><span class="tag">litigation</span><span class="reg-desc">Federal dockets and opinions, by party</span></div>
+        </div>
+      </div>
+      <div class="reg-group">
+        <h3>Web &amp; media</h3>
+        <div class="reg-items">
+          <div class="reg-item"><span class="reg-name">Google Search</span><span class="tag">general</span><span class="reg-desc">Grounded sweep for everything else</span></div>
+          <div class="reg-item"><span class="reg-name">Brave Search</span><span class="tag">brave</span><span class="reg-desc">Forum and community discussion</span></div>
+          <div class="reg-item"><span class="reg-name">YouTube</span><span class="tag">youtube</span><span class="reg-desc">New uploads from a channel</span></div>
+          <div class="reg-item"><span class="reg-name">Twitch</span><span class="tag">twitch</span><span class="reg-desc">New stream archives</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="sec-head">
+      <h2>How it works</h2>
+      <p>Three steps, and only the last one interrupts you.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-n">Step 1</div>
+        <h3>Name a topic</h3>
+        <p>A company, a drug, a person, a species, a bill. Anything you&rsquo;d otherwise check by hand.</p>
+      </div>
+      <div class="step">
+        <div class="step-n">Step 2</div>
+        <h3>Confirm the watch list</h3>
+        <p>Notified drafts what would count as news &mdash; trial updates, funding rounds, new papers &mdash; and routes each to the right database. Edit or add your own.</p>
+      </div>
+      <div class="step">
+        <div class="step-n">Step 3</div>
+        <h3>Get pinged, rarely</h3>
+        <p>It checks on your schedule. Nothing genuine, no notification &mdash; and you can still see exactly what it looked at.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>On the phone</h2>
+      <p>Real screens from a set of biotech and research topics tracked across a dozen databases.</p>
+    </div>
+    <div class="screens">
+      <figure class="screen">
+        <div class="phone">
+          <img src="assets/topics.jpg" loading="lazy" width="800" height="1739"
+               alt="The Topics list showing six tracked subjects, each with a count of watch items, and a button to add another.">
+        </div>
+        <figcaption>
+          <h3>Everything you follow</h3>
+          <p>Each topic carries its own watch list. Anything with unread news moves to the top on its own.</p>
+        </figcaption>
+      </figure>
+      <figure class="screen">
+        <div class="phone">
+          <img src="assets/transparency.jpg" loading="lazy" width="800" height="1739"
+               alt="The Aethon Therapeutics topic reporting that it checked arXiv, SEC EDGAR, ClinicalTrials.gov and general search, found 16 candidates, and kept none.">
+        </div>
+        <figcaption>
+          <h3>Silence you can audit</h3>
+          <p>&ldquo;Nothing found&rdquo; is a claim. So it names the databases it checked, when, and how many candidates it ruled out.</p>
+        </figcaption>
+      </figure>
+      <figure class="screen">
+        <div class="phone">
+          <img src="assets/activity.jpg" loading="lazy" width="800" height="1739"
+               alt="The Activity tab showing a chronological feed of matches across topics, each labelled with the topic it belongs to.">
+        </div>
+        <figcaption>
+          <h3>One feed, every topic</h3>
+          <p>Activity collects matches across everything you track, newest first, without opening each topic.</p>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>You decide what it&rsquo;s allowed to check</h2>
+      <p>Sources and cadence are settings, not assumptions baked into the app.</p>
+    </div>
+    <div class="screens two">
+      <figure class="screen">
+        <div class="phone">
+          <img src="assets/sources.jpg" loading="lazy" width="800" height="1739"
+               alt="The Data Sources screen listing each database with its tag and a toggle switch, all currently enabled.">
+        </div>
+        <figcaption>
+          <h3>Switch off a whole database</h3>
+          <p>Turn any source off and it stops being queried everywhere, for every topic &mdash; no search, and no entry in the log.</p>
+        </figcaption>
+      </figure>
+      <figure class="screen">
+        <div class="phone">
+          <img src="assets/settings.jpg" loading="lazy" width="800" height="1739"
+               alt="Topic Settings showing frequency options from daily to monthly, a check time, and the watch list with a gear icon on each item.">
+        </div>
+        <figcaption>
+          <h3>Retune any watch item</h3>
+          <p>Set how often it checks and at what hour. The gear on each item re-routes it to a different database, or to none.</p>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Details that decide whether you trust it</h2></div>
+    <div class="details">
+      <div class="detail">
+        <h3>Dates are corroborated, not assumed</h3>
+        <p>A model will confidently date a story to today. Notified weighs several independent signals &mdash; the URL path, the page&rsquo;s own metadata, an independent crawl &mdash; and scores how sure it is before anything qualifies as news.</p>
+      </div>
+      <div class="detail">
+        <h3>Identifiers you can actually use</h3>
+        <p>Papers carry their DOI, trials their NCT number, cases their docket, filings their document number. Tap to copy a link that resolves straight to the record.</p>
+        <span class="sample">https://doi.org/10.1002/mus.70390</span>
+      </div>
+      <div class="detail">
+        <h3>Routine churn isn&rsquo;t news</h3>
+        <p>Trial registries require periodic re-confirmation even when nothing changed. Notified walks the version history and reports only substantive revisions.</p>
+      </div>
+      <div class="detail">
+        <h3>Synonyms it works out for you</h3>
+        <p>Literature search is unforgiving about wording. A topic named &ldquo;Brazil nut tree&rdquo; is also searched under its binomial name, so a paper filed only that way still reaches you.</p>
+        <span class="sample">Brazil nut tree &rarr; Bertholletia excelsa</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="plans">
+    <div class="sec-head">
+      <h2>Plans</h2>
+      <p>Every tier checks the same sources. What changes is how much you can track and how often you can force a check yourself.</p>
+    </div>
+    <div class="plans">
+      <div class="plan">
+        <div class="pname">Free</div>
+        <div class="price">$0</div>
+        <ul>
+          <li>2 topics, 3 watch items each</li>
+          <li>Daily, weekly, biweekly or monthly</li>
+          <li>2 manual checks a month</li>
+        </ul>
+      </div>
+      <div class="plan">
+        <div class="pname">Plus</div>
+        <div class="price">$2.99 / month</div>
+        <ul>
+          <li>5 topics, 5 watch items each</li>
+          <li>Adds weekday and weekend schedules</li>
+          <li>10 manual checks a month</li>
+        </ul>
+      </div>
+      <div class="plan">
+        <div class="pname">Pro</div>
+        <div class="price">$7.99 / month</div>
+        <ul>
+          <li>10 topics, 8 watch items each</li>
+          <li>Hourly stock tracking against live market data</li>
+          <li>31 manual checks a month</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Absolute, not relative: the legal pages live in the notified-legal
+       repo and the app links to those exact URLs (see upgrade.tsx), so
+       they can't be moved or duplicated here. -->
+  <footer>
+    <div class="foot-row">
+      <a href="https://matyaskrizsan.github.io/notified-legal/privacy.html">Privacy Policy</a>
+      <a href="https://matyaskrizsan.github.io/notified-legal/terms.html">Terms of Use</a>
+      <a href="https://matyaskrizsan.github.io/notified-legal/support.html">Support</a>
+      <span class="spacer">&copy; 2026 Notified</span>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
