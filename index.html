@@ -118,6 +118,8 @@ h1 em { font-style: italic; color: var(--accent-soft); }
   box-shadow: 0 10px 26px -12px var(--accent);
 }
 .cta:hover { background: var(--accent); }
+.cta.ghost { background: transparent; color: var(--text); box-shadow: none; border: 1px solid var(--rule); }
+.cta.ghost:hover { border-color: var(--accent-soft); color: var(--accent-soft); background: transparent; }
 .cta:focus-visible, a:focus-visible { outline: 2px solid var(--accent-soft); outline-offset: 3px; }
 .cta-note { font-size: 14px; color: var(--faint); }
 
@@ -248,6 +250,7 @@ footer { border-top: 1px solid var(--rule); padding: 40px 0 62px; }
       </p>
       <div class="cta-row">
         <a class="cta" href="#how">See how it works</a>
+        <a class="cta ghost" href="demo/">Try the interactive demo</a>
         <span class="cta-note">Coming to iPhone</span>
       </div>
     </div>
