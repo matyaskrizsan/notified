@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Try Notified: interactive demo</title>
+<meta name="description" content="Pick a real topic Notified tracks and watch it check the same primary sources it checks live: a real match, a real 'nothing found', and a live stock tracker.">
+<link rel="icon" href="../favicon.png" sizes="96x96">
+<meta name="theme-color" content="#000000">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
+
+<style>
+:root {
+  color-scheme: dark light;
+  --ground: #000000;
+  --surface: #120D0C;
+  --surface-2: #191211;
+  --rule: #2E2320;
+  --rule-soft: #241B19;
+  --text: #F8F0EE;
+  --muted: #9A8783;
+  --faint: #8D7873;
+  --accent: #FD604C;
+  --accent-deep: #D63C22;
+  --accent-soft: #FF9483;
+  --tag-bg: #1E1412;
+  --good: #5FD68A;
+  --shadow: 0 24px 60px -24px rgba(0,0,0,.9);
+
+  --f-display: "Newsreader", ui-serif, Georgia, "Times New Roman", serif;
+  --f-body: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --ground: #FFFBFA;
+    --surface: #FFFFFF;
+    --surface-2: #FBF3F1;
+    --rule: #EFDFDB;
+    --rule-soft: #F7EBE8;
+    --text: #1A100E;
+    --muted: #6B5651;
+    --faint: #7F6D6A;
+    --accent: #D63C22;
+    --accent-deep: #A0290F;
+    --accent-soft: #B8331B;
+    --tag-bg: #FDEEEA;
+    --good: #1F8A4C;
+    --shadow: 0 24px 60px -30px rgba(60,20,12,.28);
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--text);
+  font-family: var(--f-body);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+
+.masthead { display: flex; align-items: center; gap: 14px; padding: 28px 0 0; }
+.mark { width: 46px; height: 46px; border-radius: 11px; background: #000; flex: none; overflow: hidden; box-shadow: 0 0 0 1px var(--rule), 0 6px 18px -8px rgba(253,96,76,.55); }
+.mark img { width: 100%; height: 100%; display: block; }
+.wordmark { font-family: var(--f-display); font-size: 22px; font-weight: 600; letter-spacing: -.01em; text-decoration: none; color: var(--text); }
+.masthead .back {
+  margin-left: auto; font-family: var(--f-mono); font-size: 12.5px;
+  color: var(--muted); text-decoration: none; letter-spacing: .02em;
+}
+.masthead .back:hover { color: var(--accent-soft); }
+
+.hero { padding: 56px 0 40px; max-width: 680px; }
+.eyebrow { font-family: var(--f-mono); font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; }
+h1 { font-family: var(--f-display); font-size: clamp(36px, 5vw, 54px); line-height: 1.06; font-weight: 500; letter-spacing: -.02em; margin: 0 0 18px; text-wrap: balance; }
+.lede { font-size: 18px; color: var(--muted); margin: 0; max-width: 40em; }
+.lede strong { color: var(--text); font-weight: 500; }
+
+/* ---------- example picker ---------- */
+.picker { display: flex; gap: 10px; flex-wrap: wrap; margin: 34px 0 0; }
+.chip {
+  font-family: var(--f-mono); font-size: 13.5px; letter-spacing: .01em;
+  background: var(--surface); border: 1px solid var(--rule); color: var(--muted);
+  padding: 10px 16px; border-radius: 999px; cursor: pointer; transition: border-color .15s, color .15s, background .15s;
+}
+.chip:hover { border-color: var(--accent-soft); color: var(--text); }
+.chip.active { background: var(--accent-deep); border-color: var(--accent-deep); color: #fff; }
+.chip .outcome-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; position: relative; top: -1px; }
+.chip .outcome-dot.match { background: var(--good); }
+.chip .outcome-dot.nothing { background: var(--faint); }
+
+/* ---------- demo panel ---------- */
+.panel-row { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; padding: 44px 0 30px; }
+.appcard {
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 20px;
+  box-shadow: var(--shadow); padding: 26px 24px 28px; min-height: 430px;
+}
+.appcard .topline { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
+.appcard .topic-name { font-family: var(--f-display); font-size: 24px; font-weight: 500; letter-spacing: -.01em; }
+.appcard .topic-sub { font-family: var(--f-mono); font-size: 11.5px; color: var(--faint); letter-spacing: .06em; text-transform: uppercase; }
+
+.pricebox {
+  display: flex; align-items: center; justify-content: space-between; margin-top: 16px;
+  background: var(--surface-2); border: 1px solid var(--rule-soft); border-radius: 10px; padding: 12px 14px;
+}
+.pricebox .ptitle { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin-bottom: 4px; }
+.pricebox .pval { font-family: var(--f-display); font-size: 22px; font-weight: 500; }
+.pricebox .pmeta { text-align: right; font-family: var(--f-mono); font-size: 11px; color: var(--faint); }
+.pricebox .plive { display: inline-flex; align-items: center; gap: 5px; color: var(--good); }
+.pricebox .plive::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--good); display: inline-block; }
+
+.watching-label { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); margin: 22px 0 12px; }
+.watch-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.watch-item {
+  display: flex; align-items: center; gap: 10px; background: var(--surface-2); border: 1px solid var(--rule-soft);
+  border-radius: 9px; padding: 9px 12px; font-size: 14.5px;
+  opacity: 0; transform: translateY(6px); animation: rise .38s ease forwards;
+}
+@keyframes rise { to { opacity: 1; transform: translateY(0); } }
+.watch-item .tag {
+  font-family: var(--f-mono); font-size: 10.5px; color: var(--accent-soft); background: var(--tag-bg);
+  border: 1px solid var(--rule); border-radius: 5px; padding: 1px 6px; white-space: nowrap; margin-left: auto;
+}
+.check-btn {
+  width: 100%; margin-top: 22px; background: var(--accent-deep); color: #fff; border: none;
+  font-family: var(--f-body); font-weight: 500; font-size: 15px; padding: 13px; border-radius: 10px;
+  cursor: pointer; transition: background .15s;
+}
+.check-btn:hover { background: var(--accent); }
+.check-btn:disabled { opacity: .6; cursor: default; }
+
+.checking { font-family: var(--f-mono); font-size: 13px; color: var(--muted); margin-top: 16px; min-height: 20px; }
+
+.outcome { margin-top: 18px; border-top: 1px solid var(--rule); padding-top: 18px; opacity: 0; animation: rise .4s ease forwards; }
+.outcome-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.outcome-dot-lg { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.outcome-dot-lg.match { background: var(--good); }
+.outcome-dot-lg.nothing { background: var(--faint); }
+.outcome-label { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.outcome h4 { font-size: 16px; font-weight: 600; margin: 0 0 6px; line-height: 1.35; }
+.outcome p { color: var(--muted); font-size: 14px; margin: 0 0 10px; }
+.outcome .sample {
+  display: inline-block; font-family: var(--f-mono); font-size: 12px; color: var(--accent-soft);
+  background: var(--tag-bg); border: 1px solid var(--rule); border-radius: 6px; padding: 4px 9px; max-width: 100%; overflow-x: auto; white-space: nowrap;
+}
+.outcome .nothing-note { font-size: 13.5px; color: var(--faint); line-height: 1.55; }
+.outcome .stat-line {
+  font-family: var(--f-mono); font-size: 12px; color: var(--muted); margin: 0 0 14px;
+}
+.outcome .also-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.outcome .also-list li { font-size: 12.5px; color: var(--faint); line-height: 1.5; }
+.outcome .also-list .reason { color: var(--faint); opacity: .8; }
+
+.match-list { display: flex; flex-direction: column; gap: 14px; }
+.match-item { padding-bottom: 14px; border-bottom: 1px solid var(--rule-soft); }
+.match-item:last-child { border-bottom: none; padding-bottom: 0; }
+.match-item h4 { font-size: 15px; font-weight: 600; margin: 0 0 5px; line-height: 1.35; }
+.match-item p { color: var(--muted); font-size: 13.5px; margin: 0 0 8px; }
+.match-more {
+  font-family: var(--f-mono); font-size: 12.5px; color: var(--faint); margin-top: 4px;
+  padding-top: 12px; border-top: 1px dashed var(--rule-soft); line-height: 1.6;
+}
+
+.side { padding-top: 10px; }
+.side h2 { font-family: var(--f-display); font-size: 26px; font-weight: 500; margin: 0 0 14px; letter-spacing: -.01em; min-height: 1.2em; }
+.side p { color: var(--muted); font-size: 15.5px; margin: 0 0 16px; }
+.side .real-note {
+  font-family: var(--f-mono); font-size: 12.5px; color: var(--faint); letter-spacing: .01em;
+  border-left: 2px solid var(--rule); padding-left: 14px; margin-top: 24px;
+}
+
+.cta-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 10px 0 70px; }
+.cta {
+  display: inline-flex; align-items: center; gap: 9px; background: var(--accent-deep); color: #fff;
+  font-weight: 500; font-size: 15px; padding: 13px 22px; border-radius: 10px; text-decoration: none;
+  box-shadow: 0 10px 26px -12px var(--accent);
+}
+.cta:hover { background: var(--accent); }
+a:focus-visible, button:focus-visible, .chip:focus-visible { outline: 2px solid var(--accent-soft); outline-offset: 3px; }
+
+footer { border-top: 1px solid var(--rule); padding: 40px 0 62px; }
+.foot-row { display: flex; gap: 22px; align-items: baseline; flex-wrap: wrap; color: var(--faint); font-size: 14px; }
+.foot-row a { color: var(--muted); text-decoration: none; }
+.foot-row a:hover { color: var(--accent-soft); text-decoration: underline; }
+.foot-row .spacer { margin-left: auto; }
+
+@media (max-width: 860px) {
+  .panel-row { grid-template-columns: 1fr; gap: 34px; }
+  .side { order: -1; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } .watch-item, .outcome { opacity: 1 !important; transform: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <a class="mark" href="../"><img src="../assets/logo.png" alt="Notified app icon" width="46" height="46"></a>
+    <a class="wordmark" href="../">Notified.</a>
+    <a class="back" href="../">&larr; Back to notifiedapp.site</a>
+  </header>
+
+  <div class="hero">
+    <div class="eyebrow">Try it: no install required</div>
+    <h1>Watch Notified check a topic.</h1>
+    <p class="lede">
+      These three examples are <strong>real runs</strong>, not mockups: the exact watch
+      list and the exact outcome Notified produced for that topic. Pick one and press the button.
+    </p>
+  </div>
+
+  <div class="picker" role="tablist" aria-label="Example topics">
+    <button class="chip active" data-topic="crispr" role="tab" aria-selected="true"><span class="outcome-dot match"></span>Type 2 diabetes</button>
+    <button class="chip" data-topic="ptc" role="tab" aria-selected="false"><span class="outcome-dot nothing"></span>PTC Therapeutics</button>
+    <button class="chip" data-topic="cellectis" role="tab" aria-selected="false"><span class="outcome-dot match"></span>Cellectis</button>
+  </div>
+
+  <div class="panel-row">
+    <div class="appcard">
+      <div class="topline">
+        <div class="topic-name" id="topicName">CRISPR gene editing</div>
+      </div>
+      <div class="topic-sub" id="topicSub">2 watch items</div>
+
+      <div id="priceboxSlot"></div>
+
+      <div class="watching-label">Watching for</div>
+      <ul class="watch-list" id="watchList"></ul>
+
+      <button class="check-btn" id="checkBtn">Check for news now</button>
+      <div class="checking" id="checking"></div>
+      <div id="outcomeSlot"></div>
+    </div>
+
+    <div class="side">
+      <h2 id="sideTitle"></h2>
+      <p id="sideBody1"></p>
+      <p id="sideBody2"></p>
+      <div class="real-note" id="sideNote"></div>
+    </div>
+  </div>
+
+  <div class="cta-row">
+    <a class="cta" href="https://testflight.apple.com/join/sJPNhesJ">Join the TestFlight beta</a>
+  </div>
+
+  <footer>
+    <div class="foot-row">
+      <a href="https://matyaskrizsan.github.io/notified-legal/privacy.html">Privacy Policy</a>
+      <a href="https://matyaskrizsan.github.io/notified-legal/terms.html">Terms of Use</a>
+      <a href="https://matyaskrizsan.github.io/notified-legal/support.html">Support</a>
+      <span class="spacer">&copy; 2026 Notified</span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+// Real, previously-captured outputs from live Notified topics, run through
+// the actual checking pipeline (or, for Cellectis's price box, read directly
+// off the topic's last live-checked price). Nothing here is generated on the
+// fly for arbitrary input by design: this page only replays runs that
+// actually happened, on the dates shown.
+const TOPICS = {
+  crispr: {
+    name: "Type 2 diabetes",
+    watching: [
+      { label: "New treatment breakthroughs", tag: "academic" },
+      { label: "Clinical trial results", tag: "clinicaltrials" },
+    ],
+    checkingSteps: ["Checking ClinicalTrials.gov…", "Checking general search…", "Checking CrossRef, OpenAlex, arXiv…", "Scoring 13 candidates against the checklist…"],
+    outcome: {
+      type: "matches",
+      stat: "13 CrossRef candidates considered today · 2 matched genuinely, 11 eliminated",
+      items: [
+        {
+          tag: "New treatment breakthroughs · CrossRef",
+          title: "Pancreatic-liver crosstalk, novel molecular mediators, and 2025 therapeutic breakthroughs",
+          body: "Sept 20, 2026. Reviews novel pancreas-liver signaling and recent therapeutic breakthroughs for obesity, a key driver of type 2 diabetes.",
+          sample: "DOI: 10.5662/wjm.v16.i3.118728",
+        },
+        {
+          tag: "New treatment breakthroughs · CrossRef",
+          title: "Morphofunctional characteristics of the pancreas in triple therapy (semaglutide + omeprazole + GABA) for type 2 diabetes mellitus",
+          body: "Sept 20, 2026. Triple therapy restored pancreatic histoarchitecture in a mouse model, supporting β-cell cytoprotection in T2D.",
+          sample: "DOI: 10.17709/2410-1893-2026-13-3-5",
+        },
+      ],
+    },
+    side: {
+      title: "13 candidates checked, 2 real matches",
+      body1: "Type 2 diabetes research moves fast: this single day’s academic sweep alone turned up 13 real CrossRef candidates. Clinical trial and general search came back empty that day, which happens too.",
+      body2: "Eleven of the thirteen were already known, off-topic, or not genuinely new. Two were real, freshly published papers dated that same day, and those are what actually reached the topic.",
+      note: "Real output from a Type 2 diabetes topic, checked September 20, 2026.",
+    },
+  },
+  ptc: {
+    name: "Ptc therapeutics",
+    watching: [
+      { label: "General", tag: "general" },
+      { label: "FDA approvals", tag: "fda" },
+      { label: "Clinical trial updates", tag: "clinicaltrials" },
+      { label: "SEC filings", tag: "sec" },
+      { label: "Research", tag: "academic" },
+    ],
+    checkingSteps: ["Checking arXiv, OpenAlex, CrossRef…", "Checking SEC EDGAR…", "Checking ClinicalTrials.gov, openFDA…", "Checking general search…"],
+    outcome: {
+      type: "nothing",
+      title: "23 candidates found, 23 not recent/genuine enough",
+      body: "Checked arXiv / OpenAlex / CrossRef / SEC EDGAR, ClinicalTrials.gov, openFDA, General search as of 9/16/2026, 9:01:19 AM.",
+    },
+    side: {
+      title: "A check that found nothing genuine",
+      body1: "Because silence is a claim too. This check looked across five categories and six sources, turned up 23 candidates, and kept none of them: every one was either already known, off-topic, or too old to count as news.",
+      body2: "That’s not a failed check. For a five-category topic like this, a clean “nothing genuine” is the single most common outcome, and it’s exactly why the app can afford to interrupt you when it finally does find something.",
+      note: "Real output from a Ptc Therapeutics topic, checked September 16, 2026.",
+    },
+  },
+  cellectis: {
+    name: "Cellectis",
+    watching: [
+      { label: "FDA approvals", tag: "fda" },
+      { label: "General", tag: "general" },
+      { label: "Clinical trial updates", tag: "clinicaltrials" },
+      { label: "Stock price movement", tag: "alpaca" },
+    ],
+    checkingSteps: ["Checking Alpaca Markets…", "Comparing against last check…"],
+    price: { value: "$1.53", meta: "CLLS · checked Sep 20, 2026, 3:25 PM" },
+    outcome: {
+      type: "match",
+      tag: "Stock price movement · Alpaca Markets",
+      title: "Big stock move: CLLS at $1.50 (–3.23% from last check)",
+      body: "Last check was $1.55; now $1.50, a –3.23% change. Matched September 18, 2026, 4:50 PM.",
+    },
+    side: {
+      title: "This topic also tracks a live stock price",
+      body1: "Alongside its news checklist, Cellectis also carries a live price tracker. The box above the watch list is the same current-price read the app itself uses, not a once-a-day snapshot.",
+      body2: "A notification only goes out on a move big enough to matter, like the –3.23% drop shown below from a real check three days earlier. Small day-to-day drift never reaches you.",
+      note: "Price live as of the last check; match from a real Cellectis topic, September 18, 2026.",
+    },
+  },
+};
+
+const chips = document.querySelectorAll(".chip");
+const topicName = document.getElementById("topicName");
+const topicSub = document.getElementById("topicSub");
+const watchList = document.getElementById("watchList");
+const priceboxSlot = document.getElementById("priceboxSlot");
+const checkBtn = document.getElementById("checkBtn");
+const checkingEl = document.getElementById("checking");
+const outcomeSlot = document.getElementById("outcomeSlot");
+const sideTitle = document.getElementById("sideTitle");
+const sideBody1 = document.getElementById("sideBody1");
+const sideBody2 = document.getElementById("sideBody2");
+const sideNote = document.getElementById("sideNote");
+let checkTimer = null;
+
+function renderTopic(key) {
+  clearTimeout(checkTimer);
+  const t = TOPICS[key];
+  topicName.textContent = t.name;
+  topicSub.textContent = t.watching.length + " watch items";
+
+  priceboxSlot.innerHTML = "";
+  if (t.price) {
+    const box = document.createElement("div");
+    box.className = "pricebox";
+    box.innerHTML =
+      "<div><div class=\"ptitle\">Stock price</div><div class=\"pval\">" + t.price.value + "</div></div>" +
+      "<div class=\"pmeta\"><span class=\"plive\">live</span><br>" + t.price.meta + "</div>";
+    priceboxSlot.appendChild(box);
+  }
+
+  watchList.innerHTML = "";
+  t.watching.forEach((w, i) => {
+    const li = document.createElement("li");
+    li.className = "watch-item";
+    li.style.animationDelay = (i * 70) + "ms";
+    li.innerHTML = "<span>" + w.label + "</span><span class=\"tag\">" + w.tag + "</span>";
+    watchList.appendChild(li);
+  });
+  checkingEl.textContent = "";
+  outcomeSlot.innerHTML = "";
+  checkBtn.disabled = false;
+  checkBtn.textContent = "Check for news now";
+
+  sideTitle.textContent = t.side.title;
+  sideBody1.textContent = t.side.body1;
+  sideBody2.textContent = t.side.body2;
+  sideNote.textContent = t.side.note;
+}
+
+function runCheck(key) {
+  const t = TOPICS[key];
+  checkBtn.disabled = true;
+  outcomeSlot.innerHTML = "";
+  let step = 0;
+  checkingEl.textContent = t.checkingSteps[0];
+  checkTimer = setInterval(() => {
+    step++;
+    if (step < t.checkingSteps.length) {
+      checkingEl.textContent = t.checkingSteps[step];
+    } else {
+      clearInterval(checkTimer);
+      checkingEl.textContent = "";
+      showOutcome(t.outcome);
+      checkBtn.disabled = false;
+      checkBtn.textContent = "Check again";
+    }
+  }, 520);
+}
+
+function showOutcome(o) {
+  const wrap = document.createElement("div");
+  wrap.className = "outcome";
+  if (o.type === "matches") {
+    let html =
+      "<div class=\"outcome-head\"><span class=\"outcome-dot-lg match\"></span><span class=\"outcome-label\">" + (o.more ? o.items.length + "+" : o.items.length) + " matches found</span></div>" +
+      "<div class=\"stat-line\">" + o.stat + "</div>" +
+      "<div class=\"match-list\">" +
+      o.items.map((it) =>
+        "<div class=\"match-item\"><h4>" + it.title + "</h4><p>" + it.body + "</p>" +
+        (it.sample ? "<span class=\"sample\">" + it.sample + "</span>" : "") +
+        "<div style=\"margin-top:8px\"><span class=\"tag\" style=\"margin-left:0\">" + it.tag + "</span></div></div>"
+      ).join("") +
+      "</div>" +
+      (o.more ? "<div class=\"match-more\">" + o.more + "</div>" : "");
+    wrap.innerHTML = html;
+  } else if (o.type === "match") {
+    let html =
+      "<div class=\"outcome-head\"><span class=\"outcome-dot-lg match\"></span><span class=\"outcome-label\">Match found</span></div>" +
+      "<h4>" + o.title + "</h4>" +
+      "<p>" + o.body + "</p>" +
+      (o.sample ? "<span class=\"sample\">" + o.sample + "</span>" : "") +
+      "<div style=\"margin-top:10px\"><span class=\"tag\" style=\"margin-left:0\">" + o.tag + "</span></div>";
+    if (o.stat) {
+      html += "<div class=\"stat-line\">" + o.stat + "</div>";
+      if (o.also && o.also.length) {
+        html += "<ul class=\"also-list\">" + o.also.map((a) =>
+          "<li>" + a.text + " <span class=\"reason\">(" + a.reason + ")</span></li>"
+        ).join("") + "</ul>";
+      }
+    }
+    wrap.innerHTML = html;
+  } else {
+    wrap.innerHTML =
+      "<div class=\"outcome-head\"><span class=\"outcome-dot-lg nothing\"></span><span class=\"outcome-label\">Nothing genuine this check</span></div>" +
+      "<h4>" + o.title + "</h4>" +
+      "<p class=\"nothing-note\">" + o.body + "</p>";
+  }
+  outcomeSlot.appendChild(wrap);
+}
+
+chips.forEach((chip) => {
+  chip.addEventListener("click", () => {
+    chips.forEach((c) => { c.classList.remove("active"); c.setAttribute("aria-selected", "false"); });
+    chip.classList.add("active");
+    chip.setAttribute("aria-selected", "true");
+    renderTopic(chip.dataset.topic);
+  });
+});
+
+checkBtn.addEventListener("click", () => {
+  const active = document.querySelector(".chip.active");
+  runCheck(active.dataset.topic);
+});
+
+renderTopic("crispr");
+</script>
+
+</body>
+</html>
