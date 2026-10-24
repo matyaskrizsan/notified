@@ -122,6 +122,8 @@ h1 em { font-style: italic; color: var(--accent-soft); }
 .cta.ghost:hover { border-color: var(--accent-soft); color: var(--accent-soft); background: transparent; }
 .cta:focus-visible, a:focus-visible { outline: 2px solid var(--accent-soft); outline-offset: 3px; }
 .cta-note { font-size: 14px; color: var(--faint); }
+.cta-note a { color: var(--faint); text-decoration: underline; text-underline-offset: 2px; }
+.cta-note a:hover { color: var(--accent-soft); }
 
 /* phone. height:auto is required alongside the width/height attributes on
    the <img> - without it the attribute height wins and the screenshot
@@ -249,9 +251,9 @@ footer { border-top: 1px solid var(--rule); padding: 40px 0 62px; }
         matches what you said you were watching for.
       </p>
       <div class="cta-row">
-        <a class="cta" href="#how">See how it works</a>
+        <a class="cta" href="https://testflight.apple.com/join/sJPNhesJ">Join the TestFlight beta</a>
         <a class="cta ghost" href="demo/">Try the interactive demo</a>
-        <span class="cta-note">Coming to iPhone</span>
+        <span class="cta-note"><a href="#how">See how it works</a></span>
       </div>
     </div>
     <div class="phone">
