@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Daily">
+<meta name="theme-color" content="#0a0f1c">
+<link rel="apple-touch-icon" href="/icon.png">
+<link rel="icon" href="/favicon.png">
+<title>Daily</title>
+<style>
+:root{--bg:#0a0f1c;--card:#121a2b;--card2:#1a2438;--text:#e6e9f0;--mute:#7d8aa3;--acc:#e8572e;--acc2:#ff7a52;--ok:#2fb86b;--bad:#c0463d;--r:22px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:16px -apple-system,BlinkMacSystemFont,"SF Pro Rounded","Segoe UI",sans-serif;overscroll-behavior:none}
+#app{max-width:520px;margin:0 auto;min-height:100%;padding:calc(env(safe-area-inset-top) + 14px) 16px calc(110px + env(safe-area-inset-bottom))}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.logo{font-size:28px;font-weight:700;color:var(--acc)}
+.pill{display:flex;gap:6px;align-items:center;background:var(--card);padding:8px 16px;border-radius:20px;font-weight:600}
+.days{display:flex;justify-content:space-between;margin-bottom:16px}
+.day{flex:1;text-align:center;color:var(--mute);padding:4px 0;cursor:pointer}
+.day small{display:block;font-size:12px}.day b{display:block;font-size:19px;font-weight:600;margin:2px 0 5px}
+.day i{display:block;height:3px;width:34px;margin:0 auto;border-radius:2px;background:#26324a}
+.day.sel{color:#4a9bff}.day.sel b{color:#4a9bff}
+.day i.g{background:var(--ok)}.day i.r{background:var(--bad)}.day i.p{background:#d8a63a}
+.card{background:var(--card);border-radius:var(--r);padding:18px;margin-bottom:14px}
+.ringwrap{position:relative;text-align:center}
+.ringwrap .big{position:absolute;left:0;right:0;top:48px;font-size:56px;font-weight:800;color:#c9ccd3}
+.ringwrap .sub{position:absolute;left:0;right:0;top:112px;font-size:18px;color:var(--mute)}
+h2{font-size:22px;margin:22px 4px 10px}
+.item{display:flex;align-items:center;gap:14px;background:var(--card);border-radius:18px;padding:14px 16px;margin-bottom:10px;cursor:pointer}
+.ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:22px;flex:none}
+.item .t{flex:1;font-weight:600}.item .t small{display:block;color:var(--mute);font-weight:400;font-size:13px;margin-top:2px}
+.chk{width:28px;height:28px;border-radius:50%;border:2px solid #34425f;display:grid;place-items:center;font-size:16px;color:#fff;flex:none}
+.chk.on{background:var(--ok);border-color:var(--ok)}
+.empty{color:var(--mute);text-align:center;padding:20px}
+nav{position:fixed;left:0;right:0;bottom:0;background:#0d1424;border-top:1px solid #18223a;padding:8px 0 calc(8px + env(safe-area-inset-bottom));display:flex;justify-content:space-around;align-items:flex-end;z-index:5}
+nav button{background:none;border:0;color:var(--mute);font:inherit;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:4px;width:20%;padding:4px 0}
+nav button span{font-size:24px}nav button.on{color:#fff}
+#fab{position:absolute;left:50%;top:-32px;transform:translateX(-50%);width:74px;height:74px;border-radius:50%;background:var(--acc2);border:0;color:#fff;font-size:40px;line-height:1;box-shadow:0 6px 20px #0008;transition:transform .2s;z-index:6}
+#fab.open{transform:translateX(-50%) rotate(45deg)}
+#spacer{width:20%}
+#sheet{position:fixed;inset:0;background:#000a;z-index:4;display:none;align-items:flex-end}
+#sheet.show{display:flex}
+#sheet .in{width:100%;max-width:520px;margin:0 auto;padding:18px 16px calc(120px + env(safe-area-inset-bottom));max-height:85%;overflow:auto}
+#sheet h3{margin:0 4px 12px;font-size:18px;color:#fff}
+.add{display:flex;align-items:center;gap:14px;background:var(--acc);border-radius:20px;padding:14px 16px;margin-bottom:10px;color:#fff;font-weight:600;cursor:pointer}
+.add.done{background:#2a3550;color:#9aa6bf}
+.add .ic{background:#0003}
+.row{display:flex;gap:8px;margin-bottom:12px}
+.seg{display:flex;background:var(--card);border-radius:14px;padding:4px;margin-bottom:14px}
+.seg button{flex:1;background:none;border:0;color:var(--mute);font:inherit;padding:8px;border-radius:10px}
+.seg button.on{background:var(--card2);color:#fff}
+.bar{height:10px;background:#1f2a42;border-radius:6px;overflow:hidden;margin-top:8px}.bar div{height:100%;border-radius:6px}
+.heat{display:grid;grid-template-columns:repeat(15,1fr);gap:4px;margin-top:10px}
+.heat div{aspect-ratio:1;border-radius:4px;background:#1f2a42}
+.stat{display:flex;gap:10px;margin-top:10px}.stat div{flex:1;background:var(--card2);border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font-size:20px}.stat small{color:var(--mute);font-size:12px}
+input,select{background:var(--card2);color:var(--text);border:1px solid #2a3753;border-radius:12px;padding:10px 12px;font:inherit;width:100%}
+.btn{background:var(--acc);color:#fff;border:0;border-radius:14px;padding:12px 16px;font:inherit;font-weight:600}
+.btn.ghost{background:var(--card2);color:var(--mute)}
+.stepper{display:flex;align-items:center;gap:10px}.stepper button{width:36px;height:36px;border-radius:50%;border:0;background:var(--card2);color:#fff;font-size:20px}
+.stepper b{min-width:28px;text-align:center;font-size:18px}
+.legend{color:var(--mute);font-size:13px;margin:4px 4px 12px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="sheet"></div>
+<nav id="nav"></nav>
+<script>
+const COLORS=['#e8572e','#4a9bff','#2fb86b','#d8a63a','#a66cff','#ff5f8f','#1fb5c9','#8bd44a'];
+const DEFAULTS=[
+ {id:'posture',name:'Posture',icon:'🧍',c:0,goal:7},
+ {id:'monitor',name:'Monitor project',icon:'📡',c:1,goal:6},
+ {id:'jobs',name:'Apply to jobs',icon:'💼',c:2,goal:5},
+ {id:'clean',name:'Clean',icon:'🧹',c:3,goal:5},
+ {id:'exercise',name:'Exercise',icon:'🏋️',c:4,goal:5},
+ {id:'relationships',name:'Relationships',icon:'💬',c:5,goal:4}
+];
+let S;try{S=JSON.parse(localStorage.getItem('daily-v1'))}catch(e){}
+if(!S||!S.habits)S={habits:DEFAULTS,log:{}};
+const save=()=>{try{localStorage.setItem('daily-v1',JSON.stringify(S))}catch(e){}};
+const key=d=>{const z=new Date(d);return z.getFullYear()+'-'+String(z.getMonth()+1).padStart(2,'0')+'-'+String(z.getDate()).padStart(2,'0')};
+const addD=(d,n)=>{const z=new Date(d);z.setDate(z.getDate()+n);return z};
+const today=new Date();today.setHours(12);
+let tab='home',sel=key(today),menu=false,range='week',editing=null;
+const done=(k,id)=>!!(S.log[k]&&S.log[k][id]);
+const cnt=k=>S.habits.filter(h=>done(k,h.id)).length;
+const col=h=>COLORS[h.c%COLORS.length];
+function toggle(k,id){S.log[k]=S.log[k]||{};if(S.log[k][id])delete S.log[k][id];else S.log[k][id]=1;save();render()}
+function streak(id){let n=0,d=new Date(today);if(!done(key(d),id))d=addD(d,-1);while(done(key(d),id)){n++;d=addD(d,-1)}return n}
+function weekStart(d){const z=new Date(d);const w=(z.getDay()+6)%7;return addD(z,-w)}
+function weekCount(id,ws){let n=0;for(let i=0;i<7;i++)if(done(key(addD(ws,i)),id))n++;return n}
+
+function ring(p){const r=130,c=Math.PI*r,o=c*(1-p);
+ return `<svg viewBox="0 0 300 170" width="100%"><path d="M20 150A130 130 0 0 1 280 150" fill="none" stroke="#1f2a42" stroke-width="22" stroke-linecap="round"/><path d="M20 150A130 130 0 0 1 280 150" fill="none" stroke="#c4552f" stroke-width="22" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${o}" style="transition:stroke-dashoffset .5s"/></svg>`}
+
+function home(){
+ const n=S.habits.length,dn=cnt(sel),ds=new Date(sel+'T12:00:00');
+ let days='';for(let i=-3;i<=3;i++){const d=addD(today,i),k=key(d),c=cnt(k);
+  const cls=i>0?'':c===n&&n?'g':c>0?'p':(i<0?'r':'');
+  days+=`<div class="day ${k===sel?'sel':''}" onclick="sel='${k}';render()"><small>${d.toLocaleDateString('en',{month:'short'})} ${d.getDate()}</small><b>${d.toLocaleDateString('en',{weekday:'short'})}</b><i class="${cls}"></i></div>`}
+ const items=S.habits.map(h=>`<div class="item" onclick="toggle('${sel}','${h.id}')"><div class="ic" style="background:${col(h)}33">${h.icon}</div><div class="t">${h.name}<small>${streak(h.id)} day streak</small></div><div class="chk ${done(sel,h.id)?'on':''}">${done(sel,h.id)?'✓':''}</div></div>`).join('');
+ return `<header><div class="logo">Daily</div><div class="pill">🔥 ${Math.max(0,...S.habits.map(h=>streak(h.id)))}</div></header>
+ <div class="days">${days}</div>
+ <div class="card"><div class="ringwrap">${ring(n?dn/n:0)}<div class="big">${n-dn}</div><div class="sub">to do ${sel===key(today)?'today':'this day'}</div></div>
+ <div class="legend" style="text-align:center;margin:0">${dn} of ${n} done · ${ds.toLocaleDateString('en',{weekday:'long',month:'long',day:'numeric'})}</div></div>
+ <h2>${sel===key(today)?"Today's List":'Day List'}</h2>${items||'<div class="empty">No habits yet. Add some in Goals.</div>'}`}
+
+function charts(){
+ const ws=weekStart(today);
+ const seg=`<div class="seg">${['week','month'].map(r=>`<button class="${range===r?'on':''}" onclick="range='${r}';render()">${r==='week'?'This week':'Last 30 days'}</button>`).join('')}</div>`;
+ const days=range==='week'?7:30;
+ let overall=0,tot=0;
+ const cards=S.habits.map(h=>{
+  let c=0,cells='';
+  if(range==='week'){c=weekCount(h.id,ws);const t=h.goal;overall+=Math.min(c,t);tot+=t;
+   const p=Math.min(1,c/t);
+   cells=`<div class="bar"><div style="width:${p*100}%;background:${col(h)}"></div></div><div class="stat"><div><b>${c}/${t}</b><small>this week</small></div><div><b>${streak(h.id)}</b><small>day streak</small></div><div><b>${Math.round(p*100)}%</b><small>of goal</small></div></div>`;
+  }else{
+   let g='';for(let i=29;i>=0;i--){const k=key(addD(today,-i));const on=done(k,h.id);if(on)c++;g+=`<div title="${k}" style="${on?'background:'+col(h):''}"></div>`}
+   const per=h.goal/7*30;overall+=Math.min(c,per);tot+=per;
+   cells=`<div class="heat" style="grid-template-columns:repeat(15,1fr)">${g}</div><div class="stat"><div><b>${c}</b><small>days in 30</small></div><div><b>${Math.round(per)}</b><small>goal</small></div><div><b>${Math.round(Math.min(1,c/per)*100)}%</b><small>of goal</small></div></div>`}
+  return `<div class="card"><div style="display:flex;align-items:center;gap:10px"><div class="ic" style="background:${col(h)}33">${h.icon}</div><b style="flex:1">${h.name}</b><span style="color:var(--mute);font-size:13px">goal ${h.goal}/wk</span></div>${cells}</div>`}).join('');
+ const pct=tot?Math.round(overall/tot*100):0;
+ return `<header><div class="logo">Charts</div></header>${seg}<div class="card" style="text-align:center"><div style="font-size:48px;font-weight:800;color:#c9ccd3">${pct}%</div><div style="color:var(--mute)">overall progress to goals</div><div class="bar"><div style="width:${pct}%;background:var(--acc)"></div></div></div>${cards}`}
+
+function goals(){
+ const rows=S.habits.map((h,i)=>`<div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><div class="ic" style="background:${col(h)}33">${h.icon}</div><input value="${h.name.replace(/"/g,'&quot;')}" onchange="S.habits[${i}].name=this.value.trim()||S.habits[${i}].name;save()"></div>
+ <div style="display:flex;justify-content:space-between;align-items:center"><span>Goal: days per week</span><div class="stepper"><button onclick="goal(${i},-1)">−</button><b>${h.goal}</b><button onclick="goal(${i},1)">+</button></div></div>
+ <div style="text-align:right;margin-top:10px"><button class="btn ghost" onclick="del(${i})">Remove</button></div></div>`).join('');
+ return `<header><div class="logo">Goals</div></header><div class="legend">Set how many days a week you want to hit each habit. Charts track progress against these.</div>${rows}
+ <div class="card"><b>Add a habit</b><div class="row" style="margin-top:10px"><input id="newi" placeholder="Name" ><button class="btn" onclick="addH()">Add</button></div></div>
+ <div class="legend">Data is saved on this phone only (in this browser). Use Add to Home Screen for an app-like icon.</div>`}
+function goal(i,d){S.habits[i].goal=Math.min(7,Math.max(1,S.habits[i].goal+d));save();render()}
+function del(i){if(confirm('Remove '+S.habits[i].name+'?')){S.habits.splice(i,1);save();render()}}
+function addH(){const v=document.getElementById('newi').value.trim();if(!v)return;S.habits.push({id:'h'+Date.now(),name:v,icon:'⭐',c:S.habits.length,goal:5});save();render()}
+
+function sheet(){
+ const ds=new Date(sel+'T12:00:00');
+ return `<div class="in" onclick="event.stopPropagation()"><h3>Log for ${sel===key(today)?'today':ds.toLocaleDateString('en',{month:'short',day:'numeric'})}</h3>${S.habits.map(h=>`<div class="add ${done(sel,h.id)?'done':''}" onclick="toggle('${sel}','${h.id}')"><div class="ic">${h.icon}</div><div style="flex:1">${h.name}</div><span>${done(sel,h.id)?'✓ Done':'+'}</span></div>`).join('')}</div>`}
+
+function render(){
+ const a=document.getElementById('app');
+ a.innerHTML=tab==='home'?home():tab==='charts'?charts():goals();
+ const sh=document.getElementById('sheet');sh.className=menu?'show':'';sh.innerHTML=menu?sheet():'';
+ const t=(id,ic,l)=>`<button class="${tab===id?'on':''}" onclick="tab='${id}';menu=false;render();scrollTo(0,0)"><span>${ic}</span>${l}</button>`;
+ document.getElementById('nav').innerHTML=t('home','🏠','Home')+t('goals','🎯','Goals')+'<div id="spacer"></div>'+t('charts','📊','Charts')+`<button onclick="sel=key(today);tab='home';menu=false;render();scrollTo(0,0)"><span>📅</span>Today</button>`+`<button id="fab" class="${menu?'open':''}" onclick="menu=!menu;render()">+</button>`;
+}
+document.getElementById('sheet').onclick=()=>{menu=false;render()};
+render();
+</script>
+</body>
+</html>
